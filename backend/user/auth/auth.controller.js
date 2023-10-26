@@ -10,13 +10,14 @@ import jwt from "jsonwebtoken";
 export const createUser = async (req, res, next) => {
     const schema = Joi.object({
       username: Joi.string().min(3).max(30).required(),
+      role: Joi.string().min(3).max(30).required(),
       email: Joi.string().min(3).max(200).required().email(),
       password: Joi.string().min(6).max(200).required(),
     });
 
     const { error } = schema.validate(req.body);
     if (error) return next(new ErrorHandler(error.details[0].message, 400)); 
-    const {username, email, password} = req.body;
+    const {username, email, role, password} = req.body;
 
     try {
       const existingUsername = await User.findOne({username});
@@ -26,7 +27,7 @@ export const createUser = async (req, res, next) => {
       if (existingMail)
         return next(new ErrorHandler("Record already exist", 409));
 
-      const newUser = new User({username, email, password});
+      const newUser = new User({username, email, role, password});
       await newUser.save();
 
       return res.status(201).json({message: "User created successfully"});

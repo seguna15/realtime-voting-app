@@ -49,7 +49,7 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.methods.getJwtAccessToken = function (secret, expirationTime) {
-  return sign({ id: this._id }, secret, {
+  return sign({ id: this._id, role: this.role }, secret, {
     expiresIn: expirationTime,
   });
 };

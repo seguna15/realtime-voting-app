@@ -15,7 +15,13 @@ const Header = () => {
             <Link to="/about">About</Link>
           </li>
 
-          {currentUser ? 
+          {!currentUser && (
+            <li>
+              <Link to="/sign-in">Sign In</Link>
+            </li>
+          )}
+
+          {currentUser && currentUser.role === "User" ? (
             <>
               <li>
                 <Link to="/vote">Vote</Link>
@@ -30,12 +36,27 @@ const Header = () => {
                 </Link>
               </li>
             </>
-            : 
-            <li>
-              <Link to="/sign-in">Sign In</Link>
-            </li>
-          }
-         
+          ) : null}
+
+          {currentUser && currentUser.role === "Admin" ? (
+            <>
+              <li>
+                <Link to="/admin/candidates">Candidates</Link>
+              </li>
+              <li>
+                <Link to="/admin/result">Result</Link>
+              </li>
+              <li>
+                <Link to="/profile">
+                  <img
+                    src={currentUser.profilePicture}
+                    alt="profile"
+                    className="h-7 w-7 rounded-full object-cover"
+                  />
+                </Link>
+              </li>
+            </>
+          ) : null}
         </ul>
       </div>
     </header>

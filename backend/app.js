@@ -28,13 +28,17 @@ if (process.env.NODE_ENV !== "PRODUCTION") {
 }
 
 //import routes
-import authRoute from "./user/auth/auth.router.js";
-import userRoute from "./user/user.router.js";
+import authRoute from "./user/auth/auth.routes.js";
+import userRoute from "./user/user.routes.js";
+import candidateRoute from "./candidates/candidates.routes.js"
+import voteRoute from "./votes/votes.routes.js";
 
 const API_VERSION = process.env.API_VERSION;
 
 app.use(`${API_VERSION}/auth`, authRoute);
 app.use(`${API_VERSION}/user`, userRoute);
+app.use(`${API_VERSION}/candidate`, candidateRoute);
+app.use(`${API_VERSION}/vote`, voteRoute);
 
 //For ErrorHandling
 app.use(ErrorHandler);

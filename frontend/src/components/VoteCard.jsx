@@ -1,30 +1,65 @@
-import React from 'react'
+import React, { useState } from 'react';
+import axios from 'axios';
+import { CALL_STATUS } from '../Status';
+import { toast } from 'react-toastify';
 
 const VoteCard = ({data, socket}) => {
-  const handleVote = (e) => {
+  const [status, setStatus] = useState(CALL_STATUS.IDLE)
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState(null);
+
+  const handleVote = async (e, candidateId) => {
     e.preventDefault();
-    socket.emit('sendVote', {data});
+    setStatus(CALL_STATUS.LOADING);
+    try {
+      const res = await axios.post(
+        "/vote",
+        { candidateId },
+        { withCredentials: true }
+      );
+      setStatus(CALL_STATUS.SUCCESS);
+      setMessage(res.data);
+    } catch (error) {
+      console.log(error.response.data.message);
+      setError(error.response.data.message);
+      setStatus(CALL_STATUS.ERROR);
+    }
+    
     
   }
+
+  const isError = status === CALL_STATUS.ERROR;
+  const isSuccess = status === CALL_STATUS.SUCCESS;
+  
+  if(isError) {
+    toast.error(error,{
+      position: "top-center"
+    })
+  }
+
+  if(isSuccess) {
+    toast.success(message,{
+      position: "top-center"
+    })
+    socket.emit("sendVote", { data });
+  }
+
+  
 
   return (
     <div className="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow">
      
-      <div className="flex flex-col items-center pb-10">
-        <img
-          className="w-24 h-24 mb-3 rounded-full shadow-lg"
-          src="https://img.freepik.com/premium-vector/man-avatar-profile-picture-vector-illustration_268834-538.jpg"
-          alt="Bonnie image"
-        />
-        <h5 className="mb-1 text-xl font-medium text-gray-900 ">
-          Bonnie Green
-        </h5>
+      <div className="flex flex-col items-center py-4 ">
+        
+        <h2 className="mb-1 text-xl font-medium text-gray-900 ">
+          {data.politicalParty}
+        </h2>
         <span className="text-sm text-gray-500 ">
-          Visual Designer
+          {data.candidateName}
         </span>
         <div className="flex mt-4 space-x-3 md:mt-6">
           <button
-            onClick={handleVote}
+            onClick={(e) => handleVote(e, data._id)}
             className="inline-flex items-center px-4 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300"
           >
             Vote

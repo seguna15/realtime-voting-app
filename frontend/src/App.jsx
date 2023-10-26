@@ -1,5 +1,7 @@
 import React from 'react'
 import io from "socket.io-client";
+import "react-toastify/dist/ReactToastify.css";
+import {ToastContainer} from "react-toastify"
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import {
   HomePage,
@@ -13,28 +15,45 @@ import {
   VotingPage,
   VoteResultPage,
   NotFoundPage,
+  AdminSignUpPage,
+  AdminPrivatePage,
+  CandidatePage,
 } from "./Routes";
 
 const socket = io('http://localhost:4000');
 const App = () => {
   return (
     <BrowserRouter>
+      <ToastContainer/>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/sign-in" element={<SignInPage />} />
         <Route path="/sign-up" element={<SignUpPage />} />
+        <Route path="/sign-in" element={<SignInPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route
           path="/reset-password/:email/:token"
           element={<ResetPasswordPage />}
         />
-        <Route path="/result" element={<VoteResultPage socket={socket} />} />
+
         <Route element={<PrivatePage />}>
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/vote" element={<VotingPage socket={socket} />} />
         </Route>
-        <Route path="*" element={<NotFoundPage/>} />
+
+        <Route path="/admin/sign-up" element={<AdminSignUpPage />} />
+        <Route path="/admin" element={<AdminPrivatePage />}>
+          <Route
+            path="/admin/result"
+            element={<VoteResultPage socket={socket} />}
+          />
+          <Route
+            path="/admin/candidates"
+            element={<CandidatePage />}
+          />
+          
+        </Route>
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );

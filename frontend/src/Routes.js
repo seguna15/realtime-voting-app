@@ -7,8 +7,11 @@ import PrivatePage from "./pages/PrivatePages/PrivatePage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VotingPage from "./pages/PrivatePages/VotingPage";
-import VoteResultPage from "./pages/VoteResultPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import AdminSignUpPage from "./pages/AdminPages/AdminSignUpPage";
+import AdminPrivatePage from "./pages/AdminPages/AdminPrivatePages/AdminPrivatePage";
+import VoteResultPage from "./pages/AdminPages/AdminPrivatePages/VoteResultPage";
+import CandidatePage from "./pages/AdminPages/AdminPrivatePages/CandidatePage";
 
 
 export {
@@ -23,4 +26,7 @@ export {
   VotingPage,
   VoteResultPage,
   NotFoundPage,
+  AdminSignUpPage,
+  AdminPrivatePage,
+  CandidatePage,
 };

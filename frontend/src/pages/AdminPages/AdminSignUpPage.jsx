@@ -1,10 +1,9 @@
 import SignUp from "../../components/SignUp";
-import { Link } from "react-router-dom";
 
-const SignUpPage = () => {
+const AdminSignUpPage = () => {
   const data = {
-    role: "User",
-    title: "Sign Up"
+    role: "Admin",
+    title: "Admin Sign Up",
   };
   return (
     <main className="h-[100vh] flex justify-center items-center">
@@ -13,6 +12,6 @@ const SignUpPage = () => {
       </section>
     </main>
   );
-}
+};
 
-export default SignUpPage
+export default AdminSignUpPage;
