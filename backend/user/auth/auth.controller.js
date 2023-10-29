@@ -3,9 +3,10 @@ import User from "../user.model.js";
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import { sendToken } from "../../utils/SendToken.js";
 import { sendAuthCookie } from "../../utils/createAuthCookie.js";
-import { createResetToken, verifyHackedUser, verifyRefreshToken } from "./auth.service.js";
+import { createOTPAndSaveUser, createResetToken, verifyHackedUser, verifyRefreshToken } from "./auth.service.js";
 import { sendMail } from "../../utils/sendMail.js";
 import jwt from "jsonwebtoken";
+import * as argon2 from "argon2";
 
 export const createUser = async (req, res, next) => {
     const schema = Joi.object({
@@ -27,15 +28,69 @@ export const createUser = async (req, res, next) => {
       if (existingMail)
         return next(new ErrorHandler("Record already exist", 409));
 
-      const newUser = new User({username, email, role, password});
-      await newUser.save();
+      const newUser = new User({
+        username,
+        email,
+        role,
+        password,
+      });
+      
+      await createOTPAndSaveUser(newUser)
 
-      return res.status(201).json({message: "User created successfully"});
+      return res.status(201).json({ success: true, activation:"Pending", email: newUser.email});
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
 }
 
+export const activateUser = async (req, res, next) => {
+  try {
+    const {email, otp} = req.body;
+    if (!email || !otp) return next( new ErrorHandler('Some error occurred...', 400));
+
+    const foundUser = await User.findOne({email});
+
+    if(!foundUser)  return next(new ErrorHandler('User not found', 404));
+    const userOTP = foundUser.activationToken.activationOTP;
+    const compareOTP = await argon2.verify(userOTP, otp);
+
+    if(!compareOTP) return next(new ErrorHandler('OTP does not match', 404));
+
+    const checkExpiration = Date.now() > foundUser.activationToken.expirationTime;
+
+    if(checkExpiration) return next(new ErrorHandler('OTP has expired', 403));
+
+    foundUser.activationStatus = true;
+
+    foundUser.activationToken = {}
+
+    await foundUser.save();
+
+    return res.status(200).json({success: true, message: "User activated successfully"});
+    
+  } catch (error) { 
+    return next(new ErrorHandler(error.message, 500));
+  }
+}
+
+export const newActivationCode = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if(!email) return next(new ErrorHandler('Something went wrong!', 400));
+
+    const foundUser = await User.findOne({email});
+
+    if(!foundUser) return next(new ErrorHandler('User not found.', 404));
+    
+    await createOTPAndSaveUser(foundUser);
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Kindly check your mail for the activation code" });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+}
 
 export const login = async (req, res, next) => {
   const cookies = req.cookies;
@@ -44,6 +99,17 @@ export const login = async (req, res, next) => {
   try {
     const validUser = await User.findOne({email});
     if(!validUser) return next( new ErrorHandler('User not found', 404));
+
+    if(validUser.activationStatus === false) {
+      await createOTPAndSaveUser(validUser);
+      return res
+        .status(200)
+        .json({
+          success: false,
+          status: "pending",
+          email: validUser.email,
+        });
+    }
     
     const validPassword = await validUser.comparePassword(password);
     if (!validPassword) return next( new ErrorHandler("Wrong credentials", 403));
@@ -156,7 +222,7 @@ export const forgotPassword = async (req, res, next) => {
     
     await sendMail({
       email: validUser.email,
-      subject: "Activate your account",
+      subject: "Reset your password",
       message: `Hello ${validUser.username}, click on the link to reset password ${resetUrl}`,
     }); 
     return res.status(201).json({

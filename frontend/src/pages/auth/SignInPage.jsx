@@ -24,6 +24,9 @@ const SignInPage = () => {
       const { rest, accessToken } = res.data;
       localStorage.setItem("authToken", accessToken);
       dispatch(signInSuccess(rest))
+      if(res.data.status === 'pending'){
+        return navigate(`/activation/${res.data.email}`);
+      }
       navigate('/');
     } catch (error) {
       dispatch(signInFailure(error.response.data));

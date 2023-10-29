@@ -1,5 +1,5 @@
 import app from './app.js';
-import httpServer from './socket.js'
+//import httpServer from './socket.js'
 import connectDatabase from "./db/Database.js";
 import * as dotenv from "dotenv";
 
@@ -23,7 +23,7 @@ connectDatabase();
 const PORT = process.env.PORT;
 
 //create Server
-const server = httpServer.listen(PORT, () => {
+ app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 

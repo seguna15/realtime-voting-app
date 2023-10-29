@@ -3,6 +3,7 @@ import {createServer} from "http";
 import { Server } from "socket.io";
 import * as dotenv from "dotenv";
 import cors from "cors";
+import fetchVotes from "./fetchVotes.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -13,22 +14,22 @@ const PORT = process.env.PORT || 4001;
 
 const io = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:5173"
+        origin: ["http://localhost:5173", "http://localhost:3000"]
     }
 });
 
-io.on('connection', (socket, req) => {
-    console.log(`${socket.id} user just connected`);
-    console.log(req);
+io.on("connection", (socket) => {
+  socket.on("sendVote", async (data) => {
+    if (data) {
+      const result = await fetchVotes();
+      io.emit("voteResult", result);
+    }
+  });
 
-    socket.on('sendVote', (data) => {
-        console.log(data)
-        io.emit('voteResult', data);
-    });
-    socket.on('disconnect', () => {
-        console.log('A user disconnected')
-    })
-})
+  socket.on("disconnect", () => {
+    
+  });
+});
 
 
 

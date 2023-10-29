@@ -43,7 +43,7 @@ export const voteStats = async (req, res, next) => {
           {
             $group: {
               _id: "$candidateId",
-              total: { $sum: 1 },
+              votes: { $sum: 1 },
             },
           },
           {
@@ -60,16 +60,30 @@ export const voteStats = async (req, res, next) => {
           {
             $project: {
               _id: 1,
-              total: 1,
+              votes: 1,
               "candidate_data.candidateName": 1,
               "candidate_data.politicalParty": 1,
             },
           },
         ]);
 
-      
+        const voteStats = stats.sort((a, b) => {
+          const nameA = a.candidate_data.politicalParty;
+          const nameB = b.candidate_data.politicalParty;
+
+          if (nameA < nameB) return -1;
+
+          if (nameA > nameB) return 1;
+
+          return 0;
+        });
+        const totalVoteCast = voteStats.reduce((accumulator, curValue) => {
+          return accumulator + curValue.votes;
+        }, 0);
+
         
-        return res.status(200).send(stats)
+        
+        return res.status(200).send({voteStats, totalVoteCast})
     } catch (error) {
         return next(new ErrorHandler(error.message, 500));
     }

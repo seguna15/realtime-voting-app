@@ -1,5 +1,7 @@
 import ErrorHandler from "../utils/ErrorHandler.js"
+import { findUserVoteAndDelete } from "../votes/vote.service.js";
 import User from "./user.model.js";
+
 
 export const updateUser = async (req, res, next) => {
     if(req.user.id !== req.params.id) return next(new ErrorHandler("You can only update your own account", 403));
@@ -25,12 +27,32 @@ export const updateUser = async (req, res, next) => {
 
 
 export const deleteUser = async (req, res, next) => {
-    if(req.user.id !== req.params.id) return next(new ErrorHandler("You can only delete your own account", 403));
 
     try{
-        await User.findByIdAndDelete(req.params.id);
-        res.status(200).json('User has been deleted...');
+         if (req.user.id === req.params.id || req.user.role === "Admin") {
+            await User.findByIdAndDelete(req.params.id);
+            await findUserVoteAndDelete(req.params.id);
+            return res.status(200).json("User has been deleted...");
+         }
+         return next(
+           new ErrorHandler("You can only delete your own account", 403)
+         );
+        
     }catch(error){
         return next(new ErrorHandler(error.message, 500));
+    }
+}
+
+export const getAllUsers =  async (req, res, next) => {
+    try{
+         const {role} = req.user;
+         if (!role || (role !== "Admin")) return next(new ErrorHandler("Unauthorized user"));
+         const users = await User.find({ role: { $ne: "Admin" } }).select(
+           "username email profilePicture activationStatus"
+         );
+         if(!users) return next(new ErrorHandler('No users found'), 404);
+         return res.status(200).send(users);
+    }catch(error) {
+        return next(new ErrorHandler(error.message, 500))
     }
 }

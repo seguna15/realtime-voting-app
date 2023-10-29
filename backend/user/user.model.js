@@ -27,11 +27,16 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      default: "USER"
+      default: "USER",
     },
     activationStatus: {
-      type: String,
-      default: "Inactive"
+      type: Boolean,
+      default: false,
+    },
+    activationToken: {
+      activationOTP: String,
+      timeCreated: Date,
+      expirationTime: Date,
     },
     refreshToken: [String],
     resetToken: String,

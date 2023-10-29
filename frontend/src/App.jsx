@@ -18,13 +18,15 @@ import {
   AdminSignUpPage,
   AdminPrivatePage,
   CandidatePage,
+  UsersPage,
+  ActivateTokenPage,
 } from "./Routes";
 
-const socket = io('http://localhost:4000');
+const socket = io('http://localhost:4001');
 const App = () => {
   return (
     <BrowserRouter>
-      <ToastContainer/>
+      <ToastContainer />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
@@ -35,7 +37,7 @@ const App = () => {
           path="/reset-password/:email/:token"
           element={<ResetPasswordPage />}
         />
-
+        <Route path="/activation/:email" element={<ActivateTokenPage />} />
         <Route element={<PrivatePage />}>
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/vote" element={<VotingPage socket={socket} />} />
@@ -47,11 +49,8 @@ const App = () => {
             path="/admin/result"
             element={<VoteResultPage socket={socket} />}
           />
-          <Route
-            path="/admin/candidates"
-            element={<CandidatePage />}
-          />
-          
+          <Route path="/admin/candidates" element={<CandidatePage />} />
+          <Route path="/admin/users" element={<UsersPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

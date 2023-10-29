@@ -2,36 +2,42 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEyeSlash, FaEye } from "react-icons/fa";
 import axios from "axios";
+import { CALL_STATUS } from "../Status";
 
 const SignUp = ({data}) => {
   const [formData, setFormData] = useState({});
-  const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState(CALL_STATUS.IDLE);
+  const [error, setError] = useState(null);
+  const [visible, setVisible] = useState(false)
   const navigate = useNavigate();
   const handleChange = (e) => {
     setFormData({ ...formData, role: data.role, [e.target.id]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleRegistration = async (e) => {
     e.preventDefault();
     try {
-      setLoading(true);
+      setStatus(CALL_STATUS.LOADING);
       const res = await axios.post("/auth/signup", formData);
-      setLoading(false);
-      setError(false);
-      navigate("/sign-in");
+      if(res?.data.activation === 'Pending'){
+        navigate(`/activation/${res.data.email}`)
+      }
     } catch (error) {
-      setLoading(false);
-      setError(true);
-      console.log(error.response.data);
+      setError(error.response.data);
+      setStatus(CALL_STATUS.ERROR);
     }
   };
 
-  const [visible, setVisible] = useState(false);
+  const statusObj = {
+    isLoading: status === CALL_STATUS.LOADING,
+    isSuccess: status === CALL_STATUS.SUCCESS,
+    isError: status === CALL_STATUS.ERROR,
+  };
+
   return (
     <>
       <h1 className="text-3xl text-center font-semibold">{data.title}</h1>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-4" onSubmit={handleRegistration}>
         <div className="flex flex-col gap-2">
           <label
             htmlFor="username"
@@ -88,10 +94,10 @@ const SignUp = ({data}) => {
         </div>
         <button
           type="submit"
-          disabled={loading}
+          disabled={statusObj.isLoading}
           className="bg-slate-700 text-white p-3 uppercase rounded-md hover:opacity-95 disabled:opacity-80"
         >
-          {loading ? "Loading..." : "Sign Up"}
+          {statusObj.isLoading ? "Loading..." : "Sign Up"}
         </button>
       </form>
 
@@ -101,8 +107,9 @@ const SignUp = ({data}) => {
           <span className="text-blue-500">Sign in</span>
         </Link>
       </div>
-      {error && <p className="text-red-700 mt-5">Something went wrong!</p>}
+      {statusObj.isError && <p className="text-red-700 mt-5">{error}</p>}
     </>
+   
   );
 };
 

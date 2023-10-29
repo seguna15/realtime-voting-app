@@ -47,6 +47,9 @@ const Header = () => {
                 <Link to="/admin/result">Result</Link>
               </li>
               <li>
+                <Link to="/admin/users">Users</Link>
+              </li>
+              <li>
                 <Link to="/profile">
                   <img
                     src={currentUser.profilePicture}
