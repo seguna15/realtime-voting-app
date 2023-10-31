@@ -20,6 +20,8 @@ import {
   CandidatePage,
   UsersPage,
   ActivateTokenPage,
+  LoginTokenPage,
+  CapturePage,
 } from "./Routes";
 
 const socket = io('http://localhost:4001');
@@ -30,6 +32,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/capture/:email" element={<CapturePage/>}/>
         <Route path="/sign-up" element={<SignUpPage />} />
         <Route path="/sign-in" element={<SignInPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -38,6 +41,7 @@ const App = () => {
           element={<ResetPasswordPage />}
         />
         <Route path="/activation/:email" element={<ActivateTokenPage />} />
+        <Route path="/sign-in/:email" element={<LoginTokenPage />} />
         <Route element={<PrivatePage />}>
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/vote" element={<VotingPage socket={socket} />} />

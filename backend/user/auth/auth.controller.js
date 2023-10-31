@@ -3,10 +3,17 @@ import User from "../user.model.js";
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import { sendToken } from "../../utils/SendToken.js";
 import { sendAuthCookie } from "../../utils/createAuthCookie.js";
-import { createOTPAndSaveUser, createResetToken, verifyHackedUser, verifyRefreshToken } from "./auth.service.js";
+import { createMFAOTPAndSave, createOTPAndSaveUser, createResetToken, verifyHackedUser, verifyRefreshToken } from "./auth.service.js";
 import { sendMail } from "../../utils/sendMail.js";
 import jwt from "jsonwebtoken";
 import * as argon2 from "argon2";
+import {
+  getDownloadURL,
+  ref,
+  uploadString,
+} from "firebase/storage";
+import {storage} from "../../config/firebase.js";
+import { v4 as uuidv4 } from "uuid";
 
 export const createUser = async (req, res, next) => {
     const schema = Joi.object({
@@ -35,13 +42,50 @@ export const createUser = async (req, res, next) => {
         password,
       });
       
-      await createOTPAndSaveUser(newUser)
+      await newUser.save();
 
-      return res.status(201).json({ success: true, activation:"Pending", email: newUser.email});
+      return res.status(201).json({ success: true, activation:"Next", email: newUser.email});
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
 }
+
+
+export const imageUpload = async (req, res, next) => {
+  /*
+   * 1. retrieve email, filename. 2. validate 3. fetchuser, 4. upload image, 5, if image uploaded, set profile url, 5. send activation token
+   */
+  try {
+    const {email, image} = req.body;
+
+    const foundUser = await User.findOne({email});
+    if(!foundUser) return next(new ErrorHandler('User not found.', 404));
+    const dateTime = new Date().getTime();
+
+    const filename = `voters/${dateTime}-${uuidv4()}`;
+    const storageRef = ref(storage, filename);
+
+    const snapshot = await uploadString(
+      storageRef,
+      image,
+      "data_url"
+    );
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    if(!downloadURL) return next(new ErrorHandle('Upload failed', 504));
+    
+    foundUser.profilePicture = downloadURL;
+
+    await createOTPAndSaveUser(foundUser);
+
+    return res
+      .status(201)
+      .json({ success: true, activation: "Next", email: foundUser.email });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+};
+
 
 export const activateUser = async (req, res, next) => {
   try {
@@ -54,11 +98,18 @@ export const activateUser = async (req, res, next) => {
     const userOTP = foundUser.activationToken.activationOTP;
     const compareOTP = await argon2.verify(userOTP, otp);
 
-    if(!compareOTP) return next(new ErrorHandler('OTP does not match', 404));
+    if(!compareOTP){
+      foundUser.activationToken = {};
+      await foundUser.save();
+      return next(new ErrorHandler("OTP does not match", 404));
+    } 
 
     const checkExpiration = Date.now() > foundUser.activationToken.expirationTime;
 
-    if(checkExpiration) return next(new ErrorHandler('OTP has expired', 403));
+    if(checkExpiration){
+      foundUser.activationToken = {};
+      return next(new ErrorHandler("OTP has expired", 403));
+    } 
 
     foundUser.activationStatus = true;
 
@@ -93,27 +144,73 @@ export const newActivationCode = async (req, res, next) => {
 }
 
 export const login = async (req, res, next) => {
-  const cookies = req.cookies;
-  const {email, password} = req.body;
-   if (!email || !password) return next(new ErrorHandler("Username and password are required.", 400));
   try {
-    const validUser = await User.findOne({email});
-    if(!validUser) return next( new ErrorHandler('User not found', 404));
+    
+    const { email, password } = req.body;
+    if (!email || !password) return next(new ErrorHandler("Username and password are required.", 400));
 
-    if(validUser.activationStatus === false) {
+    const validUser = await User.findOne({ email });
+    if (!validUser) return next(new ErrorHandler("User not found", 404));
+
+    if (validUser.activationStatus === false) {
       await createOTPAndSaveUser(validUser);
-      return res
-        .status(200)
-        .json({
-          success: false,
-          status: "pending",
-          email: validUser.email,
-        });
+      return res.status(200).json({
+        success: false,
+        status: "pending",
+        email: validUser.email,
+      });
     }
+
+    await createMFAOTPAndSave(validUser);
+
+    return res.status(200).json({
+      success: true,
+      status: "activated",
+      email: validUser.email,
+    });
     
-    const validPassword = await validUser.comparePassword(password);
-    if (!validPassword) return next( new ErrorHandler("Wrong credentials", 403));
-    
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+}
+
+export const twoFactorLogin = async (req, res, next) => {
+  try {
+    const cookies = req.cookies;
+    const { email, otp } = req.body;
+    if (!email || !otp)
+      return next(new ErrorHandler("Some error occurred...", 400));
+
+    const validUser = await User.findOne({ email });
+
+    if (!validUser) return next(new ErrorHandler("User not found", 404));
+
+    if (validUser.activationStatus === false) {
+      await createOTPAndSaveUser(validUser);
+      return res.status(200).json({
+        success: false,
+        status: "pending",
+        email: validUser.email,
+      });
+    }
+
+    const userOTP = validUser.mfaToken.mfaOTP;
+    const compareOTP = await argon2.verify(userOTP, otp);
+
+    if (!compareOTP){
+      validUser.mfaToken = {};
+      await validUser.save();
+      return next(new ErrorHandler("MFA code does not match", 403));
+    } 
+
+    const checkExpiration =
+      Date.now() > validUser.mfaToken.expirationTime;
+
+    if (checkExpiration) {
+      validUser.mfaToken = {};
+      return next(new ErrorHandler("OTP has expired", 403));
+    } 
+
     const newRefreshToken = await sendToken(
       validUser,
       process.env.REFRESH_SECRET_KEY,
@@ -154,6 +251,29 @@ export const login = async (req, res, next) => {
     return next(new ErrorHandler(error.message, 500));
   }
 }
+
+export const newMFACode = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) return next(new ErrorHandler("Something went wrong!", 400));
+
+    const foundUser = await User.findOne({ email });
+
+    if (!foundUser) return next(new ErrorHandler("User not found.", 404));
+
+    await createMFAOTPAndSave(foundUser);
+
+    return res
+      .status(200)
+      .json({
+        success: true,
+        message: "Kindly check your mail for the MFA code",
+      });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+};
+
 
 export const refreshToken = async (req, res, next) => {
   const cookies = req.cookies;
@@ -258,6 +378,8 @@ export const resetPassword = async(req, res, next) => {
   } catch (error) {
     return next(new ErrorHandler(error.message, 500));
   }
-  
-  
+   
 }
+
+
+

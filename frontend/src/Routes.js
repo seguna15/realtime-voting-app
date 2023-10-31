@@ -14,7 +14,8 @@ import VoteResultPage from "./pages/AdminPages/AdminPrivatePages/VoteResultPage"
 import CandidatePage from "./pages/AdminPages/AdminPrivatePages/CandidatePage";
 import UsersPage from "./pages/AdminPages/AdminPrivatePages/UsersPage";
 import ActivateTokenPage from "./pages/auth/ActivateTokenPage";
-
+import LoginTokenPage from "./pages/auth/loginTokenPage";
+import CapturePage from "./pages/auth/CapturePage";
 
 export {
   HomePage,
@@ -22,6 +23,7 @@ export {
   SignInPage,
   SignUpPage,
   ActivateTokenPage,
+  LoginTokenPage,
   ForgotPasswordPage,
   ResetPasswordPage,
   ProfilePage,
@@ -33,4 +35,5 @@ export {
   AdminPrivatePage,
   CandidatePage,
   UsersPage,
+  CapturePage,
 };

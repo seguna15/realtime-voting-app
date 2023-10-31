@@ -47,21 +47,32 @@ const UsersTableBody = ({error,users, setUsers,status}) => {
    });
  }
 
- console.log(error)
- console.log(status.isError)
+
 
   return (
     <>
-      {status.isLoading && <tr><td className='text-center text-bold text-gray-900' colSpan={5}>Data is loading</td></tr>}    
-      {status.isError && <tr><td className='text-center text-bold text-red-600' colSpan={5}>{error}</td></tr>}    
-      {
-        status.isSuccess && users.length < 1  ?
+      {status.isLoading && (
+        <tr>
+          <td className="text-center text-bold text-gray-900" colSpan={5}>
+            Data is loading
+          </td>
+        </tr>
+      )}
+      {status.isError && (
+        <tr>
+          <td className="text-center text-bold text-red-600" colSpan={5}>
+            {error}
+          </td>
+        </tr>
+      )}
+      {status.isSuccess && users.length < 1 ? (
         <tr>
           <th colSpan="4" className="w-full text-gray-600 text-center">
             No data...
           </th>
         </tr>
-        : users.map((user, index) => (
+      ) : (
+        users.map((user, index) => (
           <tr className="bg-white border-b" key={user._id}>
             <th
               scope="row"
@@ -85,10 +96,14 @@ const UsersTableBody = ({error,users, setUsers,status}) => {
               />
             </td>
             <td className="px-6 py-4 text-gray-900">
-              {user.activationStatus === "Inactive" ? (
-                <span className='bg-red-600 text-white p-1 rounded-sm shadow-lg'>{user.activationStatus}</span>
+              {user.activationStatus ? (
+                <span className="bg-green-700 text-white p-1 rounded-sm shadow-lg">
+                  Active
+                </span>
               ) : (
-                <span className='bg-green-700 text-white p-1 rounded-sm shadow-lg'>{user.activationStatus}</span>
+                <span className="bg-red-600 text-white p-1 rounded-sm shadow-lg">
+                  Inactive
+                </span>
               )}
             </td>
 
@@ -120,8 +135,7 @@ const UsersTableBody = ({error,users, setUsers,status}) => {
             </td>
           </tr>
         ))
-      }
-      
+      )}
     </>
   );
 };

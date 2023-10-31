@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import axios from 'axios';
+
 import useAxiosFetch from '../../../hooks/useAxiosFetch';
 
 const VoteResultPage = ({socket}) => {

@@ -4,15 +4,11 @@ import cookieParser from "cookie-parser";
 import * as dotenv from "dotenv";
 import cors from "cors";
 
-
-
 const app = express();
-
-
 
 //middlewares
 
-app.use(express.json());
+app.use(express.json({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 //app.use("/", express.static("uploads"));

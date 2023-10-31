@@ -38,6 +38,11 @@ const userSchema = new mongoose.Schema(
       timeCreated: Date,
       expirationTime: Date,
     },
+    mfaToken: {
+      mfaOTP: String,
+      timeCreated: Date,
+      expirationTime: Date,
+    },
     refreshToken: [String],
     resetToken: String,
   },

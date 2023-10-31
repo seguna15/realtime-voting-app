@@ -2,14 +2,15 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEyeSlash, FaEye } from "react-icons/fa";
 import axios from "axios";
-import { signInStart, signInSuccess, signInFailure } from "../../redux/user/userSlice";
-import { useDispatch, useSelector } from "react-redux";
+
+import { CALL_STATUS } from "../../Status";
 
 const SignInPage = () => {
   const [formData, setFormData] = useState({});
-  const {loading, error } = useSelector(state => state.user)
+  const [status, setStatus] = useState(CALL_STATUS.IDLE);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -18,19 +19,29 @@ const SignInPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      dispatch(signInStart())
+      setStatus(CALL_STATUS.LOADING)
       const res = await axios.post("/auth/login", formData, {withCredentials: true});
+      setStatus(CALL_STATUS.SUCCESS)
       
-      const { rest, accessToken } = res.data;
-      localStorage.setItem("authToken", accessToken);
-      dispatch(signInSuccess(rest))
+      if(res.data.status ==='activated'){
+        return navigate(`/sign-in/${res.data.email}`);
+      }
+
       if(res.data.status === 'pending'){
         return navigate(`/activation/${res.data.email}`);
       }
-      navigate('/');
+      
     } catch (error) {
-      dispatch(signInFailure(error.response.data));
+      console.log(error);
+      setStatus(CALL_STATUS.ERROR);
+      setError(error.response.data.message);
     }
+  };
+
+  const statusObj = {
+    isLoading: status === CALL_STATUS.LOADING,
+    isSuccess: status === CALL_STATUS.SUCCESS,
+    isError: status === CALL_STATUS.ERROR,
   };
 
   const [visible, setVisible] = useState(false);
@@ -80,10 +91,10 @@ const SignInPage = () => {
           </div>
           <button
             type="submit"
-            disabled={loading}
+            disabled={statusObj.isLoading}
             className="bg-slate-700 text-white p-3 uppercase rounded-md hover:opacity-95 disabled:opacity-80"
           >
-            {loading ? "Loading..." : "Sign In"}
+            {statusObj.isLoading ? "Loading..." : "Sign In"}
           </button>
         </form>
         <div className="flex flex-col md:flex-row  gap-2 justify-between mt-5">
@@ -101,7 +112,7 @@ const SignInPage = () => {
           </Link>
         </div>
         <p className="text-red-700 mt-5">
-          {error ? error.message || "Something went wrong!" : ""}
+          {statusObj.isError ? error || "Something went wrong!" : ""}
         </p>
       </section>
     </main>

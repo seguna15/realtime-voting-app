@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEyeSlash, FaEye } from "react-icons/fa";
 import axios from "axios";
@@ -9,6 +9,7 @@ const SignUp = ({data}) => {
   const [status, setStatus] = useState(CALL_STATUS.IDLE);
   const [error, setError] = useState(null);
   const [visible, setVisible] = useState(false)
+  
   const navigate = useNavigate();
   const handleChange = (e) => {
     setFormData({ ...formData, role: data.role, [e.target.id]: e.target.value });
@@ -19,11 +20,11 @@ const SignUp = ({data}) => {
     try {
       setStatus(CALL_STATUS.LOADING);
       const res = await axios.post("/auth/signup", formData);
-      if(res?.data.activation === 'Pending'){
-        navigate(`/activation/${res.data.email}`)
+      if(res?.data.activation === 'Next'){
+        navigate(`/capture/${res.data.email}`);
       }
     } catch (error) {
-      setError(error.response.data);
+      setError(error.response.data.message);
       setStatus(CALL_STATUS.ERROR);
     }
   };
@@ -35,7 +36,9 @@ const SignUp = ({data}) => {
   };
 
   return (
+    
     <>
+    
       <h1 className="text-3xl text-center font-semibold">{data.title}</h1>
       <form className="flex flex-col gap-4" onSubmit={handleRegistration}>
         <div className="flex flex-col gap-2">

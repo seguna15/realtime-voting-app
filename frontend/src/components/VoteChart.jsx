@@ -4,8 +4,6 @@ import React from "react";
 
 const VoteChart =  ({data}) => {
     
-  
-
   return (
     <BarChart
       width={1000}

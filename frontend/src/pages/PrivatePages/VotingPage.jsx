@@ -9,10 +9,10 @@ const VotingPage = ({socket}) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(candidateFetch())
-  },[])
+    dispatch(candidateFetch());
+  }, [dispatch]);
 
-  socket
+  
   return (
     <>
       <Header />

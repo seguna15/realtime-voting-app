@@ -82,3 +82,23 @@ export const createOTPAndSaveUser = async (user) => {
       message: `<p style="font-size:20px;">Hello ${user.username}, use the OTP below to activate your account </p> <p style="color: red; font-size:20px;">Kindly note that the OTP expires within 30 minutes.</p> <br> <h1 style="color: #333; font-size: 30px;">${otp}</h1>`,
     }); 
 }
+
+export const createMFAOTPAndSave = async (user) => {
+    const otp = createOTP();
+
+    const hashedOtp = await argon2.hash(otp, 10);
+    
+    user.mfaToken = {
+      mfaOTP: hashedOtp,
+      timeCreated: Date.now(),
+      expirationTime: Date.now() + 600000,
+    };
+    
+    await user.save();
+
+    await sendMail({
+      email: user.email,
+      subject: "Login into your account",
+      message: `<p style="font-size:20px;">Hello ${user.username}, use the OTP below to login into your account </p> <p style="color: red; font-size:20px;">Kindly note that the OTP expires within 10 minutes.</p> <br> <h1 style="color: green; font-size: 30px;">${otp}</h1>`,
+    }); 
+}
