@@ -9,6 +9,11 @@ const voteSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Candidate'
     },
+    voterPicture: String,
+    voteStatus: {
+        type: Boolean,
+        default: false,
+    },
     dateCast: {
         type: Date,
         default: Date.now(),

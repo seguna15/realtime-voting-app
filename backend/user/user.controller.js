@@ -36,11 +36,12 @@ export const deleteUser = async (req, res, next) => {
             const desertRef = ref(storage, foundUser.profilePicture);
             
              // Delete the file
-             await deleteObject(desertRef);
+            await deleteObject(desertRef);
+           
             
-              await User.findByIdAndDelete(req.params.id);
-              await findUserVoteAndDelete(req.params.id);
-              return res.status(200).json("User has been deleted...");
+            await User.findByIdAndDelete(req.params.id);
+            await findUserVoteAndDelete(req.params.id);
+            return res.status(200).json("User has been deleted...");
          }
          return next(
            new ErrorHandler("You can only delete your own account", 403)

@@ -52,9 +52,7 @@ export const createUser = async (req, res, next) => {
 
 
 export const imageUpload = async (req, res, next) => {
-  /*
-   * 1. retrieve email, filename. 2. validate 3. fetchuser, 4. upload image, 5, if image uploaded, set profile url, 5. send activation token
-   */
+  
   try {
     const {email, image} = req.body;
 
@@ -84,7 +82,7 @@ export const imageUpload = async (req, res, next) => {
   } catch (error) {
     return next(new ErrorHandler(error.message, 500));
   }
-};
+}
 
 
 export const activateUser = async (req, res, next) => {
@@ -210,7 +208,7 @@ export const twoFactorLogin = async (req, res, next) => {
       validUser.mfaToken = {};
       return next(new ErrorHandler("OTP has expired", 403));
     } 
-
+    validUser.mfaToken = {};
     const newRefreshToken = await sendToken(
       validUser,
       process.env.REFRESH_SECRET_KEY,

@@ -1,4 +1,5 @@
 import ErrorHandler from "../utils/ErrorHandler.js";
+import { findCandidateVotesAndDelete } from "../votes/vote.service.js";
 import Candidate from "./candidates.model.js";
 
 
@@ -81,6 +82,8 @@ export const deleteCandidate = async (req, res, next) => {
 
     const deletedCandidate = await Candidate.findByIdAndDelete(id);
     if(!deletedCandidate) return next(new ErrorHandler("Could not delete user", 404))
+    
+    await findCandidateVotesAndDelete(id);
     return res.status(200).send(deletedCandidate);
   } catch (error) {
     return next(new ErrorHandler(error.message, 500));

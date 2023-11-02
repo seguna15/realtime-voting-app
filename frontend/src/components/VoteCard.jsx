@@ -3,10 +3,10 @@ import axios from 'axios';
 import { CALL_STATUS } from '../Status';
 import { toast } from 'react-toastify';
 
-const VoteCard = ({data, socket}) => {
-  const [status, setStatus] = useState(CALL_STATUS.IDLE)
+const VoteCard = ({ data, setShowCapture }) => {
+  const [status, setStatus] = useState(CALL_STATUS.IDLE);
   const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null);
+  
 
   const handleVote = async (e, candidateId) => {
     e.preventDefault();
@@ -17,46 +17,37 @@ const VoteCard = ({data, socket}) => {
         { candidateId },
         { withCredentials: true }
       );
-      setStatus(CALL_STATUS.SUCCESS);
-      setMessage(res.data);
+      if (res.data.status === "pending") {
+        setStatus(CALL_STATUS.SUCCESS);
+        
+      }
     } catch (error) {
       console.log(error.response.data.message);
       setError(error.response.data.message);
       setStatus(CALL_STATUS.ERROR);
     }
-    
-    
-  }
+  };
 
   const isError = status === CALL_STATUS.ERROR;
   const isSuccess = status === CALL_STATUS.SUCCESS;
-  
-  if(isError) {
-    toast.error(error,{
-      position: "top-center"
-    })
+
+  if (isError) {
+    toast.error(error, {
+      position: "top-center",
+    });
   }
 
-  if(isSuccess) {
-    toast.success(message,{
-      position: "top-center"
-    })
-    socket.emit("sendVote", { data });
+  if (isSuccess) {
+    setShowCapture(true);
   }
-
-  
 
   return (
     <div className="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow">
-     
       <div className="flex flex-col items-center py-4 ">
-        
         <h2 className="mb-1 text-xl font-medium text-gray-900 ">
           {data.politicalParty}
         </h2>
-        <span className="text-sm text-gray-500 ">
-          {data.candidateName}
-        </span>
+        <span className="text-sm text-gray-500 ">{data.candidateName}</span>
         <div className="flex mt-4 space-x-3 md:mt-6">
           <button
             onClick={(e) => handleVote(e, data._id)}
@@ -64,12 +55,10 @@ const VoteCard = ({data, socket}) => {
           >
             Vote
           </button>
-          
-          
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default VoteCard
