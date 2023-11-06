@@ -5,9 +5,9 @@ const Header = () => {
   const {currentUser} = useSelector(state => state.user);
   return (
     <header className="bg-gray-800 text-white">
-      <div className="flex justify-between items-center max-w-6xl mx-auto p-3">
-        <h1 className="font-bold">Auth App</h1>
-        <ul className="flex gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-center max-w-6xl mx-auto p-3">
+        <h1 className="font-bold">Realtime Voting App</h1>
+        <ul className="flex flex-col md:flex-row gap-4">
           <li>
             <Link to="/">Home</Link>
           </li>

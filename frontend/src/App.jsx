@@ -24,7 +24,7 @@ import {
   CapturePage,
 } from "./Routes";
 
-const socket = io('http://localhost:4001');
+const socket = io('http://localhost:4000');
 const App = () => {
   return (
     <BrowserRouter>

@@ -4,5 +4,13 @@ import pluginRewriteAll from "vite-plugin-rewrite-all";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:4000",
+        secure: false,
+      },
+    },
+  },
   plugins: [react(), pluginRewriteAll()],
 });
