@@ -24,7 +24,7 @@ import {
   CapturePage,
 } from "./Routes";
 
-const socket = io('http://localhost:4000');
+const socket = io("https://realtime-voting.onrender.com/");
 const App = () => {
   return (
     <BrowserRouter>
