@@ -2,11 +2,19 @@ import express from "express";
 import ErrorHandler from "./middleware/error.middleware.js";
 import cookieParser from "cookie-parser";
 import * as dotenv from "dotenv";
+import path from 'path';
 import cors from "cors";
+
+const __dirname = path.resolve();
 
 const app = express();
 
 //middlewares
+
+app.use(express.static(path.join(__dirname, '/frontend/dist')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
+});
 
 app.use(express.json({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
