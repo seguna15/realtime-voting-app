@@ -20,6 +20,7 @@ const useAxiosFetch = (dataUrl) => {
                     signal: abortController.signal
                 });
                 if(isMounted) {
+                    console.log(response)
                     setData(response.data);
                     setStatus(CALL_STATUS.SUCCESS)
                 }
