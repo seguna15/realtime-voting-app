@@ -9,22 +9,44 @@ const useAxiosFetch = (dataUrl) => {
     const [fetchError, setFetchError] = useState(null);
 
     useEffect(() => {
-        
+        let isMounted = true;
+        const abortController = new AbortController()
+
         const fetchData = async (url) => {
             setStatus(CALL_STATUS.LOADING);
             try{
-                const response = await axios.get(url, {withCredentials: true});
-                
-                console.log(response.data)
-                setData(response.data);
-                setStatus(CALL_STATUS.SUCCESS)
-            }catch(error){  
-                setFetchError(error.response.data.message);
-                setStatus(CALL_STATUS.ERROR);
+                const response = await axios.get(url, {
+                    withCredentials: true,
+                    signal: abortController.signal
+                });
+                if(isMounted) {
+                    setData(response.data);
+                    setStatus(CALL_STATUS.SUCCESS)
+                }
+            }catch(error){
+                if(isMounted){
+                     if (axios.isCancel(error)) {
+                       setFetchError("Operation cancelled");
+                       setStatus(CALL_STATUS.ERROR);
+                     }
+                     else {
+                       setFetchError(error.response.data.message);
+                       setStatus(CALL_STATUS.ERROR);
+                     }
+                }
+            }finally{
+                isMounted = false;
             }
         }
 
         fetchData(dataUrl);
+
+        const cleanUp = () => {
+            isMounted = false;
+            abortController.abort();
+        }
+
+        return cleanUp
     }, [dataUrl]);
 
     const statusObj = {
