@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       "/api": {
         target: "https://realtime-voting.onrender.com/",
-        secure: false,
+        secure: true,
       },
     },
   },
